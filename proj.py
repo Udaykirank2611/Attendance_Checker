@@ -17,6 +17,7 @@ if(st.button('Check attendence')):
     else:
         if atten >= min_75:
          st.success("IGA nuv clg ranakarle")
+         st.information("nuv iga eppatinundi intlo kurcuna nee attendence {}% aitadi".format(percent))
         elif req>remaining:
             st.error("nuv roju vochina attendence {}% kadu".format(percent))
         else:
