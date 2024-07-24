@@ -1,10 +1,10 @@
 import streamlit as st
 import math
 st.title("Attendence")
-classs = st.number_input("Eppativarak enni classes ainai",value=0, step=1, format="%d")
-atten = st.number_input("Enni attend ainav", value=0, step=1, format="%d")
-total = st.number_input("Motham enni classes aitai anukuntunav (350 for csd)", value=0, step=1, format="%d")
-min_p = st.selectbox("Enta % kavali enti: ",
+classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
+atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
+total = st.number_input("Total Number of classes (350 for csd)", value=0, step=1, format="%d")
+min_p = st.selectbox("Attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
 percent = int(min_p[:2])
 min_75 = math.ceil(total*0.01*percent)
@@ -13,20 +13,20 @@ req = min_75-atten
 bunks = remaining-req
 if(st.button('Check attendence')):
     if atten>classs:
-        st.error("sariga enter chey ra yedava {} classes lo {} ela attend aiyav ra".format(classs,atten))
+        st.error("classes held should be more than the classes attended")
     else:
         if atten >= min_75:
-         st.success("IGA nuv clg ranakarle")
-         st.info("nuv iga eppatinundi intlo kurchuna nee attendence {}% aitadi".format(percent))
+         st.success("You have reached the attendence criteria")
+         st.info("even if you dont come to college from now your attendence will be above {}%".format(percent))
         elif req>remaining:
-            st.error("nuv roju vochina attendence {}% kadu".format(percent))
+            st.error("You cant reach {}% even if you attend every class".format(percent))
         else:
             bunks = remaining-req
-            st.text("nuv inka {} classes bunk kotochu".format(bunks))
+            st.text("you can bunk {} classes.".format(bunks))
             if(bunks<15):
-                st.warning("daily clg ra iga")
+                st.warning("You have to come to college regularly")
             else:
-                st.success("konni rojulu absent avochu em kadu")
+                st.success("You can take a few days off")
         st.header("Details")
         st.text("total number of classes : {}".format(total))
         st.text("total number of classes took place : {}".format(classs))
