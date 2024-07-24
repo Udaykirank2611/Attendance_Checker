@@ -32,5 +32,36 @@ if(st.button('Check attendence')):
         st.text("total number of classes took place : {}".format(classs))
         st.text("total number of classes attended : {}".format(atten))
         st.text("min number of classes for {}% : {}".format(percent,min_75))
-        st.text("number of classes left : {}".format(remaining))                                                           
-                                                      
+        st.text("number of classes left : {}".format(remaining))      
+footer = """
+<style>
+.footer {
+    position: relative;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--footer-background-color);
+    color: var(--footer-text-color);
+    text-align: center;
+    padding: 10px;
+    margin-top: 20px;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --footer-background-color: #333;
+        --footer-text-color: #f1f1f1;
+    }
+}
+@media (prefers-color-scheme: light) {
+    :root {
+        --footer-background-color: #f1f1f1;
+        --footer-text-color: #333;
+    }
+}
+</style>
+<div class="footer">
+    <p>Developed by Uday Kiran</p>
+    <p>Contact: 245122750006@mvsrec.edu.in</p>
+</div>
+"""
+st.markdown(footer, unsafe_allow_html=True)
