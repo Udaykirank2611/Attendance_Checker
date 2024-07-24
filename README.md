@@ -1,2 +1,2 @@
-# Attendence_Checker
-CHECK YOUR ATTENDENCE DETAILS
+# Attendance_Checker
+CHECK YOUR ATTENDANCE DETAILS
