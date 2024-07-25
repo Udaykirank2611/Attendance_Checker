@@ -28,11 +28,13 @@ if(st.button('Check attendence')):
         else:
             bunks = remaining-req
             st.info("you can bunk {} classes.".format(bunks))
-            st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
-            st.info("Maximum percentage you can reach if you attend every class {}".format(max_percen))
             if(bunks<15):
+                st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
+                st.warning("Maximum percentage you can reach if you attend every class {}".format(max_percen))
                 st.warning("You have to come to college regularly")
             else:
+                st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
+                st.success("Maximum percentage you can reach if you attend every class {}".format(max_percen))
                 st.success("You can take a few days off")
         st.header("Details")
         st.text("total number of classes : {}".format(total))
