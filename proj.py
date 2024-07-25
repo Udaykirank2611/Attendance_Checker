@@ -11,8 +11,9 @@ min_75 = math.ceil(total*0.01*percent)
 remaining = total-classs
 req = min_75-atten
 bunks = remaining-req
-max_percen = ((atten+remaining)/total)*100
 if(st.button('Check attendence')):
+    max_percen = ((atten+remaining)/total)*100
+    max_percen = round(max_percen,2)
     if atten>classs:
         st.error("classes held should be more than the classes attended")
     else:
