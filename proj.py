@@ -53,7 +53,7 @@ if(st.button('Check attendence')):
                 st.warning("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
                 st.warning("You have to come to college regularly")
             else:
-                st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
+                st.info("you have to attend {} more classes out of remaining {} classes to maintain {}%.".format(min_75-atten,remaining,percent))
                 st.success("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
                 st.success("You can take a few days off")
         st.header("Details")
