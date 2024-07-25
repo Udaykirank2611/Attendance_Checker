@@ -20,7 +20,7 @@ elif branch == "AIML":
     total = 384
 else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
-min_p = st.selectbox("Required attendance percentage ",
+min_p = st.selectbox("Required attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
 st.subheader("NOTE : ")
 st.text("These numbers are approximate and not exact.\nThey may vary by 1 or 2 percent depending on additional classes taken.")
