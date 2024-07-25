@@ -18,7 +18,7 @@ else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 min_p = st.selectbox("Attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
-st.subheader("NOTE")
+st.subheader("NOTE : ")
 st.text("These numbers are approximate and not exact\nThey may vary by 1 or 2 percent depending on additional classes taken.")
 percent = int(min_p[:2])
 min_75 = math.ceil(total*0.01*percent)
