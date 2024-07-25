@@ -4,7 +4,7 @@ st.title("Attendence")
 classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
 atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
 branch = st.selectbox("Select Your branch: ",
-                     ['CSE', 'DS', 'IT','ECE','OTHERS'])
+                     ['CSE', 'DS', 'IT','ECE','EEE','OTHERS'])
 #total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
 if branch=='CSE':
     total = 330
@@ -14,12 +14,14 @@ elif branch == "IT":
     total = 335
 elif branch == "ECE":
     total = 360
+elif branch=="EEE":
+    total = 316
 else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 min_p = st.selectbox("Attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
 st.subheader("NOTE : ")
-st.text("These numbers are approximate and not exact\nThey may vary by 1 or 2 percent depending on additional classes taken.")
+st.text("These numbers are approximate and not exact.\nThey may vary by 1 or 2 percent depending on additional classes taken.")
 percent = int(min_p[:2])
 min_75 = math.ceil(total*0.01*percent)
 remaining = total-classs
