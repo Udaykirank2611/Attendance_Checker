@@ -18,7 +18,7 @@ elif branch=="EEE":
     total = 334
 elif branch == "AIML":
     total = 384
-elif brach == "IoT":
+elif branch == "IoT":
     total = 370
 else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
