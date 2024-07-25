@@ -11,6 +11,7 @@ min_75 = math.ceil(total*0.01*percent)
 remaining = total-classs
 req = min_75-atten
 bunks = remaining-req
+max_percen = ((atten+remaining)/total)*100
 if(st.button('Check attendence')):
     if atten>classs:
         st.error("classes held should be more than the classes attended")
@@ -20,7 +21,7 @@ if(st.button('Check attendence')):
          st.info("even if you dont come to college from now your attendence will be above {}%".format(percent))
         elif req>remaining:
             st.error("You cant reach {}% even if you attend every class".format(percent))
-            st.error("Maximum percentage you can reach if you attend every class {}".format((atten+remaining)/total)*100)
+            st.error("Maximum percentage you can reach if you attend every class {}".format(max_percen))
         else:
             bunks = remaining-req
             st.text("you can bunk {} classes.".format(bunks))
