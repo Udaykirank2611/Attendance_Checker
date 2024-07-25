@@ -38,8 +38,8 @@ if(st.button('Check attendence')):
                 st.success("You can take a few days off")
         st.header("Details")
         st.text("total number of classes : {}".format(total))
-        st.text("total number of classes took place : {}".format(classs))
-        st.text("total number of classes attended : {}".format(atten))
+        st.text("number of classes held : {}".format(classs))
+        st.text("number of classes attended : {}".format(atten))
         st.text("min number of classes for {}% : {}".format(percent,min_75))
         st.text("number of classes left : {}".format(remaining))      
 footer = """
