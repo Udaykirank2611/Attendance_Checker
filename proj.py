@@ -3,7 +3,19 @@ import math
 st.title("Attendence")
 classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
 atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
-total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,335 for it,360 for ece)", value=0, step=1, format="%d")
+branch = st.selectbox("Select Your branch: ",
+                     ['CSE', 'DS', 'IT','ECE','OTHERS'])
+#total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
+if branch=='CSE':
+    total = 330
+elif branch=="DS":
+    total = 373
+elif branch == "IT":
+    total = 335
+elif branch == "ECE":
+    total = 360
+else:
+    total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 min_p = st.selectbox("Attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
 percent = int(min_p[:2])
