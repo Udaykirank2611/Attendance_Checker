@@ -4,7 +4,7 @@ st.title("Attendence")
 classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
 atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
 branch = st.selectbox("Select Your branch: ",
-                     ['CSE', 'DS','AIML','IT','ECE','EEE','OTHERS'])
+                     ['CSE', 'DS','AIML',,'IoT','IT','ECE','EEE','OTHERS'])
 #total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
 if branch=='CSE':
     total = 330
@@ -18,6 +18,8 @@ elif branch=="EEE":
     total = 334
 elif branch == "AIML":
     total = 384
+elif brach == "IoT":
+    total = 370
 else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 min_p = st.selectbox("Required attendance percentage: ",
