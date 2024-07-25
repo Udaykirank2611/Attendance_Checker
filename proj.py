@@ -15,7 +15,7 @@ elif branch == "IT":
 elif branch == "ECE":
     total = 360
 elif branch=="EEE":
-    total = 316
+    total = 334
 else:
     total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 min_p = st.selectbox("Attendance percentage: ",
