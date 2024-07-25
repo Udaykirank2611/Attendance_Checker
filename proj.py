@@ -24,17 +24,17 @@ if(st.button('Check attendence')):
          st.info("even if you dont come to college from now your attendence will be above {}%".format(percent))
         elif req>remaining:
             st.error("You cant reach {}% even if you attend every class".format(percent))
-            st.error("Maximum percentage you can reach if you attend every class {}".format(max_percen))
+            st.error("Maximum percentage you can reach if you attend every is class {}%".format(max_percen))
         else:
             bunks = remaining-req
             st.info("you can bunk {} classes.".format(bunks))
             if(bunks<15):
                 st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
-                st.warning("Maximum percentage you can reach if you attend every class {}".format(max_percen))
+                st.warning("Maximum percentage you can reach if you attend every is class {}%".format(max_percen))
                 st.warning("You have to come to college regularly")
             else:
                 st.info("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
-                st.success("Maximum percentage you can reach if you attend every class {}".format(max_percen))
+                st.success("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
                 st.success("You can take a few days off")
         st.header("Details")
         st.text("total number of classes : {}".format(total))
