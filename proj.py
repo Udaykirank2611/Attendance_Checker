@@ -20,6 +20,7 @@ if(st.button('Check attendence')):
          st.info("even if you dont come to college from now your attendence will be above {}%".format(percent))
         elif req>remaining:
             st.error("You cant reach {}% even if you attend every class".format(percent))
+            st.error("Maximum percentage you can reach if you attend every class {}".format((atten+remaining)/total)*100)
         else:
             bunks = remaining-req
             st.text("you can bunk {} classes.".format(bunks))
