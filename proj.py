@@ -23,6 +23,7 @@ if(st.button('Check attendence')):
         else:
             bunks = remaining-req
             st.text("you can bunk {} classes.".format(bunks))
+            st.text("you have to attend {} more classes to get {}%.".format(min_75-atten,percent))
             if(bunks<15):
                 st.warning("You have to come to college regularly")
             else:
