@@ -4,7 +4,7 @@ st.title("Attendence")
 classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
 atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
 clg = st.selectbox("Enter your college details: ",
-                   ["MVSREC 2nd Year","Others"]
+                   ["MVSREC 2nd Year","Others"])
 if clg == "MVSREC 2nd Year":
 
     branch = st.selectbox("Select Your branch: ",
