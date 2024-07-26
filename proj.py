@@ -17,7 +17,7 @@ if clg == "MVSREC 2nd Year":
     elif branch == "IT":
         total = 335
     elif branch == "ECE":
-        total = 360
+        total = 370
     elif branch=="EEE":
         total = 334
     elif branch == "AIML":
