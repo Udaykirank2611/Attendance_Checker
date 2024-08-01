@@ -11,19 +11,19 @@ if clg == "MVSREC 2nd Year":
                      ['CSE', 'DS','AIML','IoT','IT','ECE','EEE','OTHERS'])
 #total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
     if branch=='CSE':
-        total = 330
+        total = 319
     elif branch=="DS":
         total = 363
     elif branch == "IT":
-        total = 335
+        total = 323
     elif branch == "ECE":
-        total = 370
+        total = 359
     elif branch=="EEE":
-        total = 334
+        total = 324
     elif branch == "AIML":
-        total = 384
+        total = 372
     elif branch == "IoT":
-        total = 370
+        total = 358
     else:
         total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 else:
