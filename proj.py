@@ -13,7 +13,7 @@ if clg == "MVSREC 2nd Year":
     if branch=='CSE':
         total = 330
     elif branch=="DS":
-        total = 373
+        total = 363
     elif branch == "IT":
         total = 335
     elif branch == "ECE":
