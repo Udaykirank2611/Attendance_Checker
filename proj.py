@@ -31,7 +31,7 @@ else:
 min_p = st.selectbox("Required attendance percentage: ",
                      ['65%', '70%', '75%','80%'])
 st.subheader("NOTE : ")
-st.text("These numbers are approximate and not exact.\nThey may vary by 1 or 2 percent depending on additional classes taken.")
+st.text("These numbers are approximate and not exact.\nThey may vary by 1 or 2 percent depending on additional classes taken.\nWhenever there is a holiday confirmation or class cancellation, the website will be updated")
 percent = int(min_p[:2])
 min_75 = math.ceil(total*0.01*percent)
 remaining = total-classs
