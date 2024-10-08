@@ -5,25 +5,25 @@ classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
 atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
 clg = st.selectbox("Enter your college details: ",
                    ["MVSREC 2nd Year","Others"])
-if clg == "MVSREC 2nd Year":
+if clg == "MVSREC 3rd Year":
 
     branch = st.selectbox("Select Your branch: ",
                      ['CSE', 'DS','AIML','IoT','IT','ECE','EEE','OTHERS'])
 #total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
     if branch=='CSE':
-        total = 319
+        total = 350
     elif branch=="DS":
-        total = 363
-    elif branch == "IT":
-        total = 323
-    elif branch == "ECE":
-        total = 359
-    elif branch=="EEE":
         total = 324
+    elif branch == "IT":
+        total = 360
+    elif branch == "ECE":
+        total = 350
+    elif branch=="EEE":
+        total = 320
     elif branch == "AIML":
-        total = 372
+        total = 330
     elif branch == "IoT":
-        total = 358
+        total = 340
     else:
         total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
 else:
