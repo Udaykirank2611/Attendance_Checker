@@ -1,102 +1,103 @@
 import streamlit as st
 import math
-st.title("Attendence")
-classs = st.number_input("Number of classes held",value=0, step=1, format="%d")
-atten = st.number_input("Number of classes attended", value=0, step=1, format="%d")
-clg = st.selectbox("Enter your college details: ",
-                   ["MVSREC 2nd Year","Others"])
-if clg == "MVSREC 3rd Year":
 
-    branch = st.selectbox("Select Your branch: ",
-                     ['CSE', 'DS','AIML','IoT','IT','ECE','EEE','OTHERS'])
-#total = st.number_input("Total Number of classes (330 for cse,373 for cse-ds,360 for ece)", value=0, step=1, format="%d")
-    if branch=='CSE':
-        total = 350
-    elif branch=="DS":
-        total = 324
-    elif branch == "IT":
-        total = 360
-    elif branch == "ECE":
-        total = 350
-    elif branch=="EEE":
-        total = 320
-    elif branch == "AIML":
-        total = 330
-    elif branch == "IoT":
-        total = 340
-    else:
-        total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
+# --- Page Configuration ---
+st.set_page_config(page_title="Attendance Tracker", layout="centered")
+
+# --- Title ---
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>📊 Attendance Tracker</h1>", unsafe_allow_html=True)
+st.markdown("---")
+
+# --- Input Section ---
+st.subheader("📥 Enter Your Details")
+class_held = st.number_input("📘 Number of Classes Held", min_value=0, step=1, format="%d")
+class_attended = st.number_input("🧑‍🏫 Number of Classes Attended", min_value=0, step=1, format="%d")
+
+college = st.selectbox("🏫 Select Your College", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
+
+# Branch and total classes logic
+if college == "MVSREC 3rd Year":
+    branch = st.selectbox("🧪 Select Your Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
+
+    total_classes = {
+        'CSE': 350,
+        'DS': 324,
+        'AIML': 330,
+        'IoT': 340,
+        'IT': 360,
+        'ECE': 350,
+        'EEE': 320
+    }.get(branch, st.number_input("Enter Total Number of Classes", min_value=0, step=1, format="%d"))
 else:
-    total = st.number_input("Total Number of classes", value=0, step=1, format="%d")
-min_p = st.selectbox("Required attendance percentage: ",
-                     ['65%', '70%', '75%','80%'])
-st.subheader("NOTE : ")
-st.text("These numbers are approximate and not exact.\nThey may vary by 1 or 2 percent depending on additional classes taken.\nWhenever there is a holiday confirmation or class cancellation, the website will be updated")
-percent = int(min_p[:2])
-min_75 = math.ceil(total*0.01*percent)
-remaining = total-classs
-req = min_75-atten
-bunks = remaining-req
-if(st.button('Check attendence')):
-    if atten>classs:
-        st.error("classes held should be more than the classes attended")
-    elif total == 0:
-        st.error("total classes cannot be 0.")
+    total_classes = st.number_input("Enter Total Number of Classes", min_value=0, step=1, format="%d")
+
+# Minimum percentage requirement
+min_percent_str = st.selectbox("🎯 Required Attendance Percentage", ['65%', '70%', '75%', '80%'])
+min_percent = int(min_percent_str.strip('%'))
+
+# --- Notes ---
+st.markdown("---")
+st.subheader("ℹ️ Notes")
+st.info("These numbers are approximate and may vary by 1–2% depending on extra or cancelled classes.\nThe portal will be updated upon schedule changes.")
+
+# --- Calculation ---
+min_required = math.ceil(total_classes * min_percent / 100)
+remaining_classes = total_classes - class_held
+required_more = min_required - class_attended
+bunks_possible = remaining_classes - required_more
+
+# --- Button and Output ---
+if st.button("✅ Check Attendance"):
+    st.markdown("---")
+    st.subheader("📋 Result Summary")
+
+    if class_attended > class_held:
+        st.error("❌ Classes attended cannot be more than classes held.")
+    elif total_classes == 0:
+        st.error("❌ Total classes cannot be 0.")
     else:
-        max_percen = ((atten+remaining)/total)*100
-        max_percen = round(max_percen,2)
-        if atten >= min_75:
-         st.success("You have reached the attendence criteria")
-         st.info("even if you dont come to college from now your attendence will be above {}%".format(percent))
-        elif req>remaining:
-            st.error("You cant reach {}% even if you attend every class".format(percent))
-            st.error("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
+        max_possible_percent = round(((class_attended + remaining_classes) / total_classes) * 100, 2)
+
+        if class_attended >= min_required:
+            st.success(f"🎉 You've already reached the required {min_percent}% attendance.")
+            st.info(f"You can skip all remaining classes and still stay above {min_percent}%.")
+        elif required_more > remaining_classes:
+            st.error(f"⚠️ You cannot reach {min_percent}% even if you attend every remaining class.")
+            st.error(f"Max possible attendance: {max_possible_percent}%")
         else:
-            bunks = remaining-req
-            st.info("you can bunk {} classes.".format(bunks))
-            if(bunks<15):
-                st.info("you have to attend {} more classes out of remaining {} classes to maintain {}%.".format(min_75-atten,remaining,percent))
-                st.warning("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
-                st.warning("You have to come to college regularly")
+            st.info(f"You can safely bunk up to **{bunks_possible}** classes.")
+            st.info(f"You must attend **{required_more}** more classes out of **{remaining_classes}** to maintain {min_percent}%.")
+            if bunks_possible < 15:
+                st.warning(f"⚠️ Limited room to skip. Max attendance if you attend all: {max_possible_percent}%")
             else:
-                st.info("you have to attend {} more classes out of remaining {} classes to maintain {}%.".format(min_75-atten,remaining,percent))
-                st.success("Maximum percentage you can reach if you attend every class is {}%".format(max_percen))
-                st.success("You can take a few days off")
-        st.header("Details")
-        st.text("total number of classes : {}".format(total))
-        st.text("number of classes held : {}".format(classs))
-        st.text("number of classes attended : {}".format(atten))
-        st.text("min number of classes for {}% : {}".format(percent,min_75))
-        st.text("number of classes left : {}".format(remaining))      
+                st.success(f"👍 You're on track! Max possible attendance: {max_possible_percent}%")
+
+        # --- Detailed Breakdown ---
+        st.markdown("---")
+        st.subheader("📊 Detailed Breakdown")
+        st.write(f"• Total Classes Scheduled: **{total_classes}**")
+        st.write(f"• Classes Held: **{class_held}**")
+        st.write(f"• Classes Attended: **{class_attended}**")
+        st.write(f"• Required for {min_percent}%: **{min_required}**")
+        st.write(f"• Remaining Classes: **{remaining_classes}**")
+
+# --- Footer ---
 footer = """
 <style>
 .footer {
-    position: relative;
+    position: fixed;
     left: 0;
     bottom: 0;
     width: 100%;
-    background-color: var(--footer-background-color);
-    color: var(--footer-text-color);
+    background-color: #262730;
+    color: #f1f1f1;
     text-align: center;
     padding: 10px;
-    margin-top: 20px;
-}
-@media (prefers-color-scheme: dark) {
-    :root {
-        --footer-background-color: #333;
-        --footer-text-color: #f1f1f1;
-    }
-}
-@media (prefers-color-scheme: light) {
-    :root {
-        --footer-background-color: #f1f1f1;
-        --footer-text-color: #333;
-    }
+    font-size: 14px;
 }
 </style>
 <div class="footer">
-    <p>Developed by Uday Kiran</p>
-    <p>Contact: 245122750006@mvsrec.edu.in</p>
+    Developed by <b>Uday Kiran</b> | 📧 245122750006@mvsrec.edu.in
 </div>
 """
 st.markdown(footer, unsafe_allow_html=True)
