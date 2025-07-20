@@ -1,19 +1,48 @@
 import streamlit as st
 import math
 
-# --- PAGE CONFIG ---
 st.set_page_config(page_title="Attendance Tracker", layout="centered")
 
-# --- GLOBAL PAGE STYLE ---
+# ===================== PAGE STYLES =======================
 st.markdown("""
 <style>
-/* Background gradient for whole page */
 body, .stApp {
     background: linear-gradient(135deg, #6d83f2 0%, #0bc8a9 100%) !important;
     min-height: 100vh;
 }
 
-/* Main glass card container */
+/* ==== GLASS MENU BAR ==== */
+.top-menu {
+    background: rgba(0,24,48, 0.75);
+    padding: 18px 5px 13px 5px;
+    border-radius: 0 0 26px 26px;
+    box-shadow: 0 6px 18px rgba(31,74,138,0.08);
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.top-menu a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all .22s;
+    padding: 7px 18px;
+    border-radius: 20px;
+}
+
+.top-menu a:hover {
+    background: #0bc8a9;
+    color: #2b2b2b;
+    box-shadow: 0 2px 12px rgba(17,228,215,0.18);
+    text-decoration: none;
+    transform: translateY(-2px) scale(1.06);
+}
+
+/* ==== Main glass card ==== */
 .main-card {
     max-width: 670px;
     margin: 32px auto 32px auto;
@@ -26,7 +55,7 @@ body, .stApp {
     font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
 }
 
-/* Title Styling */
+/* Title */
 .cool-title {
     font-size: 2.44rem;
     color: #fff;
@@ -45,7 +74,7 @@ body, .stApp {
     text-shadow: 0 2px 10px #3b68aa30;
 }
 
-/* Inputs and selects glassy look */
+/* Inputs/glass */
 .stNumberInput > div, .stSelectbox > div, .stTextInput > div {
     background: rgba(255,255,255,0.11);
     border-radius: 14px !important;
@@ -162,35 +191,34 @@ label, .css-1cpxqw2, .css-1jy7b63 {
     }
 }
 
-/* Responsive adjustments */
 @media (max-width: 1000px) {
     .main-card { padding: 13px 6px 2px 6px; }
     .cool-title { font-size: 1.6rem; }
 }
-
-
 </style>
 """, unsafe_allow_html=True)
 
+# ===================== TOP MENU BAR ==========================
+st.markdown("""
+<div class="top-menu">
+    <a href="https://mvsrpapers.streamlit.app" target="_blank">MVSREC Papers</a>
+</div>
+""", unsafe_allow_html=True)
 
-# --- MAIN CONTENT CARD START ---
+# ================= MAIN CARD START ================================
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 
-# --- PAGE TITLE ---
 st.markdown("<div class='cool-title'>📊 Attendance Tracker</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Input Section ---
 st.subheader("📥 Enter Your Details")
 
-# Classes Held and Attended inputs
 class_held = st.number_input("📘 Number of Classes Held", min_value=0, step=1, format="%d")
 class_attended = st.number_input("🧑‍🏫 Number of Classes Attended", min_value=0, step=1, format="%d")
 
-# College selection
 college = st.selectbox("🏫 Select Your College", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
 
-# --- Total Number of Classes Input with Info Icon ---
+# ---------- TOTAL NUMBER OF CLASSES with INFO ICON -------------
 def render_total_classes_input(college_choice):
     total_label_html = """
     <div class='info-container'>
@@ -220,13 +248,8 @@ def render_total_classes_input(college_choice):
 
         if branch in totals_dict:
             default_total = totals_dict[branch]
-            # Show disabled input with default total but also let user override with a separate number input
-            # Because disabled inputs are hard to style or do much with, we allow an override below it
-            # Show the disabled number input for default total
             st.number_input("Total Number of Classes (Default)", value=default_total, disabled=True, key="total_classes_disabled")
-            # Allow user override:
             total_classes = st.number_input("Or enter Total Number of Classes (override)", min_value=0, step=1, format="%d", key="total_classes_override")
-            # Use override if entered, otherwise default
             if total_classes == 0:
                 total_classes = default_total
         else:
@@ -238,7 +261,6 @@ def render_total_classes_input(college_choice):
 
 total_classes = render_total_classes_input(college)
 
-# Minimum attendance percentage required
 min_percent_str = st.selectbox("🎯 Required Attendance Percentage", ['65%', '70%', '75%', '80%'])
 min_percent = int(min_percent_str.strip('%'))
 
@@ -246,13 +268,11 @@ st.markdown("---")
 st.subheader("ℹ️ Notes")
 st.info("These numbers are approximate and may vary by 1–2% depending on extra or cancelled classes.\nThe portal will be updated upon schedule changes.")
 
-# --- Calculations ---
 min_required = math.ceil(total_classes * min_percent / 100)
 remaining_classes = total_classes - class_held
 required_more = min_required - class_attended
 bunks_possible = remaining_classes - required_more
 
-# --- Button and Results ---
 if st.button("✅ Check Attendance"):
     st.markdown("---")
     st.subheader("📋 Result Summary")
@@ -286,10 +306,9 @@ if st.button("✅ Check Attendance"):
         st.write(f"• Required for {min_percent}%: **{min_required}**")
         st.write(f"• Remaining Classes: **{remaining_classes}**")
 
-# --- MAIN CONTENT CARD END ---
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- FOOTER (matches other page style) ---
+# ============= FOOTER ================
 footer = """
 <style>
 .footer {
