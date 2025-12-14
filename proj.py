@@ -304,7 +304,7 @@ with st.container():
     total_classes = 0
     if college == "MVSREC 4th Year":
         branch = st.selectbox("Select Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
-        totals_dict = {'CSE': 400, 'DS': 433, 'AIML': 400, 'IoT': 400, 'IT': 410, 'ECE': 400, 'EEE': 400}
+        totals_dict = {'CSE': 310, 'DS': 433, 'AIML': 350, 'IoT': 350, 'IT': 350, 'ECE': 350, 'EEE': 350}
         if branch in totals_dict:
             st.info(f"💡 Default total for {branch} is {totals_dict[branch]}.")
             val = default_total if default_total > 0 else totals_dict[branch]
