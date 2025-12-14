@@ -181,12 +181,12 @@ with st.container():
     with col2:
         class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d")
 
-    college = st.selectbox("Select Year/College", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
+    college = st.selectbox("Select Year/College", ["MVSREC 2nd Year", "MVSREC 4th Year", "Others"])
     
     total_classes = 0
-    if college == "MVSREC 3rd Year":
+    if college == "MVSREC 4th Year":
         branch = st.selectbox("Select Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
-        totals_dict = {'CSE': 350, 'DS': 324, 'AIML': 330, 'IoT': 340, 'IT': 360, 'ECE': 350, 'EEE': 320}
+        totals_dict = {'CSE': 400, 'DS': 433, 'AIML': 400, 'IoT': 400, 'IT': 410, 'ECE': 400, 'EEE': 400}
         
         if branch in totals_dict:
             st.info(f"💡 Default total for {branch} is {totals_dict[branch]}.")
