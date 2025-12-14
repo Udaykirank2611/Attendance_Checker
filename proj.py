@@ -236,8 +236,6 @@ if st.session_state.calculated:
     # Calculations
     min_required = math.ceil(total_classes * min_percent / 100)
     remaining_classes = total_classes - class_held
-    if remaining_classes < 0: remaining_classes = 0
-    
     missed_classes = class_held - class_attended
     if missed_classes < 0: missed_classes = 0 
     
@@ -249,11 +247,9 @@ if st.session_state.calculated:
         st.error("❌ Total classes cannot be 0")
     else:
         required_more = max(0, min_required - class_attended)
-        
-        # FIX: Ensure bunk numbers are never negative
         bunks_possible = max(0, remaining_classes - required_more)
         
-        # Vacation Mode (Consecutive Bunks)
+        # Vacation Mode
         target_ratio = min_percent / 100
         consecutive_bunks = 0
         if target_ratio > 0:
@@ -279,6 +275,8 @@ if st.session_state.calculated:
         
         with c2:
             st.markdown(f"### Status Report {badge_html}", unsafe_allow_html=True)
+            # --- NEW LINE: EXACT ACCURACY ---
+            st.markdown(f"<p style='font-size:1.1rem; font-weight:600; color:#fff; margin-bottom:10px;'>Exact Percentage: <span style='color:#0bc8a9'>{current_pct}%</span></p>", unsafe_allow_html=True)
             
             if class_attended >= min_required:
                 st.success(f"🎉 **SAFE!** You've hit {min_percent}%!")
@@ -351,8 +349,6 @@ if st.session_state.calculated:
             medical_certs = st.slider("Classes you keep CERTIFICATE:", 0, 200, 0)
 
         # SIMULATION LOGIC
-        # Numerator = Attended + Certificates (Medical adds to attended)
-        # Denominator = Held + Future Absences (Future absences add to Held)
         sim_numerator = class_attended + medical_certs
         sim_denominator = class_held + future_bunks
         
@@ -361,18 +357,15 @@ if st.session_state.calculated:
             if sim_pct > 100: sim_pct = 100.0
             
             # --- LIVE SIMULATED DASHBOARD ---
-            # 1. Calc Simulated Metrics
             sim_remaining = remaining_classes - future_bunks 
             if sim_remaining < 0: sim_remaining = 0
             
-            # Simulated missed for chart = (Held + Future) - (Attended + Certs)
             sim_missed_chart = sim_denominator - sim_numerator
             if sim_missed_chart < 0: sim_missed_chart = 0
             
             sim_req_total = math.ceil(total_classes * min_percent / 100)
             sim_req_more = max(0, sim_req_total - sim_numerator)
             
-            # FIX: Ensure simulated bunk numbers are never negative
             sim_bunks_possible = max(0, sim_remaining - sim_req_more)
             
             sim_badge = get_badge(sim_pct)
@@ -380,7 +373,6 @@ if st.session_state.calculated:
             st.markdown("---")
             st.markdown(f"#### 📊 Simulated Result")
             
-            # Same Grid Layout as Main Dashboard
             c_sim1, c_sim2 = st.columns([1, 1.5])
             
             with c_sim1:
@@ -388,7 +380,9 @@ if st.session_state.calculated:
             
             with c_sim2:
                 st.markdown(f"### Status Report {sim_badge}", unsafe_allow_html=True)
-                
+                # --- NEW LINE: EXACT ACCURACY IN SIMULATOR ---
+                st.markdown(f"<p style='font-size:1.1rem; font-weight:600; color:#fff; margin-bottom:10px;'>Predicted Percentage: <span style='color:#0bc8a9'>{sim_pct}%</span></p>", unsafe_allow_html=True)
+
                 if sim_pct >= min_percent:
                     st.success(f"🎉 **SAFE!** With this plan, you hit {min_percent}%!")
                     if sim_remaining > 0:
