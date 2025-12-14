@@ -3,7 +3,6 @@ import math
 import plotly.graph_objects as go
 import datetime
 from fpdf import FPDF
-import urllib.parse
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
@@ -14,11 +13,11 @@ if 'calculated' not in st.session_state:
 if 'theme' not in st.session_state:
     st.session_state.theme = 'Dark'
 
-# --- FEATURE 5: RESET DATA (Sidebar) ---
+# --- FEATURE: RESET DATA (Sidebar) ---
 with st.sidebar:
     st.header("⚙️ Settings")
     
-    # FEATURE 6: THEME SWITCHER
+    # THEME SWITCHER
     theme_toggle = st.toggle("🌞 Light Mode", value=(st.session_state.theme == 'Light'))
     if theme_toggle:
         st.session_state.theme = 'Light'
@@ -45,6 +44,7 @@ if st.session_state.theme == 'Dark':
     stat_box_bg = "rgba(255,255,255,0.05)"
     sub_text = "#94a3b8"
 else:
+    # Light Mode Colors
     bg_color = "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
     text_color = "#1e293b"
     glass_bg = "rgba(255, 255, 255, 0.7)"
@@ -64,6 +64,7 @@ st.markdown(f"""
         color: {text_color};
     }}
 
+    /* Header Styling */
     .title-text {{
         color: {text_color};
         font-weight: 700;
@@ -75,6 +76,7 @@ st.markdown(f"""
         margin-bottom: 0.5rem;
     }}
     
+    /* Navbar */
     .nav-bar {{
         background: {glass_bg};
         border: 1px solid {glass_border};
@@ -99,6 +101,7 @@ st.markdown(f"""
         color: #6366f1;
     }}
 
+    /* Cards */
     .glass-container {{
         background: {glass_bg};
         border-radius: 24px;
@@ -132,6 +135,7 @@ st.markdown(f"""
         border: 1px solid {glass_border};
     }}
 
+    /* Badges */
     .badge {{
         display: inline-block;
         padding: 5px 12px;
@@ -146,6 +150,7 @@ st.markdown(f"""
     .badge-risk {{ background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #d97706; }}
     .badge-danger {{ background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #dc2626; }}
 
+    /* Inputs */
     .stSelectbox label, .stNumberInput label, .stSlider label {{
         color: {text_color} !important;
         font-weight: 600;
@@ -157,10 +162,11 @@ st.markdown(f"""
         border-radius: 12px !important;
     }}
     
-    div.stButton > button {{
+    /* === FIX: BUTTON STYLING (Both Regular & Download) === */
+    div.stButton > button, div.stDownloadButton > button {{
         width: 100%;
         background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
-        color: #ffffff !important;
+        color: #ffffff !important; /* Force white text */
         border-radius: 12px !important;
         border: none !important;
         padding: 0.6rem 1rem !important;
@@ -168,16 +174,17 @@ st.markdown(f"""
         box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
         transition: all 0.3s ease;
     }}
-    div.stButton > button:hover {{
+    div.stButton > button:hover, div.stDownloadButton > button:hover {{
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
         filter: brightness(1.1);
         color: #ffffff !important;
     }}
     div.stButton > button p {{
-        color: #ffffff !important;
+        color: #ffffff !important; 
     }}
 
+    /* Stats */
     .stat-box {{
         text-align: center; 
         background: {stat_box_bg}; 
@@ -189,6 +196,7 @@ st.markdown(f"""
     
     h3, h4 {{ color: {text_color} !important; }}
 
+    /* Footer */
     .footer {{
         text-align: center;
         color: {sub_text};
@@ -197,26 +205,6 @@ st.markdown(f"""
         padding-bottom: 20px;
         border-top: 1px solid {glass_border};
         padding-top: 20px;
-    }}
-    
-    /* Email Button Style */
-    .email-btn {{
-        display: block;
-        width: 100%;
-        text-align: center;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid {text_color};
-        color: {text_color};
-        padding: 10px;
-        border-radius: 12px;
-        text-decoration: none;
-        font-weight: 600;
-        margin-top: 10px;
-        transition: all 0.2s;
-    }}
-    .email-btn:hover {{
-        background: {text_color};
-        color: {bg_color};
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -301,6 +289,7 @@ st.markdown("""
     <a href="#">📊 Tracker Pro</a>
 </div>
 """, unsafe_allow_html=True)
+
 st.markdown('<h1 class="title-text">ATTENDANCE PRO</h1>', unsafe_allow_html=True)
 
 with st.container():
@@ -349,6 +338,7 @@ if st.session_state.calculated:
         st.error("❌ Total classes cannot be 0")
     else:
         required_more = max(0, min_required - class_attended)
+        # --- FIX: NEGATIVE BUNK NUMBERS ---
         bunks_possible = max(0, remaining_classes - required_more)
         
         target_ratio = min_percent / 100
@@ -365,7 +355,7 @@ if st.session_state.calculated:
             else: return '<span class="badge badge-danger">💀 DETAINED ZONE</span>'
         badge_html = get_badge(current_pct)
 
-        # --- MEME LOGIC (NEW GIFS) ---
+        # --- MEME LOGIC ---
         meme_url = ""
         meme_caption = ""
         if current_pct >= 85:
@@ -375,7 +365,6 @@ if st.session_state.calculated:
             meme_url = "https://media.giphy.com/media/l0HlHJGHe3yAMhdQY/giphy.gif"
             meme_caption = "Safe... for now. 😌"
         elif current_pct >= 65:
-            # Updated to "Airplane Movie Sweating" (Funny, No text)
             meme_url = "https://media.giphy.com/media/l4FATJpd4LWgeruTK/giphy.gif"
             meme_caption = "Getting intense! 😅"
         else:
@@ -417,7 +406,6 @@ if st.session_state.calculated:
         target_for_current_held = math.ceil(class_held * (min_percent / 100))
         certs_needed = target_for_current_held - class_attended
         current_real_percent = (class_attended / class_held) * 100 if class_held > 0 else 0
-        
         if certs_needed > 0 and current_real_percent < min_percent:
             st.markdown('<div class="cert-container">', unsafe_allow_html=True)
             st.markdown(f"### 📜 Medical/Event Certificate Calculator")
@@ -427,7 +415,6 @@ if st.session_state.calculated:
             else:
                 st.error(f"Not enough missed classes to cover with certificates.")
             st.markdown('</div>', unsafe_allow_html=True)
-
         elif consecutive_bunks > 0:
              st.markdown(f"""<div class="glass-container" style="border-left: 5px solid #0bc8a9;"><h4 style="margin:0; color:#fff;">🏖️ Vacation Mode</h4><p style="color:#cbd5e1; margin-top:5px;">You can skip the next <b>{consecutive_bunks} classes in a row</b> before your percentage drops to {min_percent}%.</p></div>""", unsafe_allow_html=True)
 
@@ -443,12 +430,17 @@ if st.session_state.calculated:
         if sim_denominator > 0:
             sim_pct = round((sim_numerator / sim_denominator) * 100, 2)
             if sim_pct > 100: sim_pct = 100.0
+            
             sim_remaining = remaining_classes - future_bunks 
             if sim_remaining < 0: sim_remaining = 0
+            
             sim_missed_chart = sim_denominator - sim_numerator
             if sim_missed_chart < 0: sim_missed_chart = 0
+            
             sim_req_total = math.ceil(total_classes * min_percent / 100)
             sim_req_more = max(0, sim_req_total - sim_numerator)
+            
+            # --- FIX: NEGATIVE SIMULATED BUNK NUMBERS ---
             sim_bunks_possible = max(0, sim_remaining - sim_req_more)
             
             st.markdown('<div class="sim-result-box">', unsafe_allow_html=True)
@@ -465,40 +457,26 @@ if st.session_state.calculated:
                     st.error(f"⚠️ **IMPOSSIBLE** to reach {min_percent}%.")
                 else:
                     st.warning(f"You MUST attend **{sim_req_more}** more classes.")
+                    
+                st.markdown("""<div style="display:flex; gap:10px; margin-top:10px;">""", unsafe_allow_html=True)
+                col_sa, col_sb = st.columns(2)
+                with col_sa:
+                    st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_req_more}</div><div class='stat-lbl'>Need to Attend</div></div>", unsafe_allow_html=True)
+                with col_sb:
+                    st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_bunks_possible}</div><div class='stat-lbl'>Can Bunk</div></div>", unsafe_allow_html=True)
+
             st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         # --- DOWNLOADS ---
-        col_d1, col_d2 = st.columns(2)
-        with col_d1:
-            pdf_bytes = generate_pdf(class_held, class_attended, total_classes, current_pct, required_more, bunks_possible, certs_needed)
-            st.download_button(
-                label="📄 Download PDF Report",
-                data=pdf_bytes,
-                file_name=f"Attendance_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.pdf",
-                mime="application/pdf"
-            )
-        
-        # --- FEATURE 7: EMAIL REPORT BUTTON ---
-        with col_d2:
-            email_subject = "My Attendance Report"
-            email_body = f"""
-            Here is my attendance summary:
-            - Current Percentage: {current_pct}%
-            - Classes Attended: {class_attended}/{class_held}
-            - Need to Attend: {required_more} more classes.
-            - Can Bunk: {bunks_possible} classes.
-            
-            Generated by Attendance Tracker Pro.
-            """
-            # Encode for URL
-            email_link = f"mailto:?subject={urllib.parse.quote(email_subject)}&body={urllib.parse.quote(email_body)}"
-            
-            st.markdown(f"""
-            <a href="{email_link}" target="_blank" class="email-btn">
-                📧 Email Me My Report
-            </a>
-            """, unsafe_allow_html=True)
+        pdf_bytes = generate_pdf(class_held, class_attended, total_classes, current_pct, required_more, bunks_possible, certs_needed)
+        st.download_button(
+            label="📄 Download PDF Report",
+            data=pdf_bytes,
+            file_name=f"Attendance_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.pdf",
+            mime="application/pdf",
+            type="primary"
+        )
 
 # --- FOOTER ---
 st.markdown("""
