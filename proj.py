@@ -7,7 +7,6 @@ import datetime
 st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
 
 # --- FEATURE 5: AUTO-SAVE (Query Parameters) ---
-# Retrieve values from URL if they exist
 query_params = st.query_params
 default_held = int(query_params.get("held", 0))
 default_attended = int(query_params.get("att", 0))
@@ -89,6 +88,14 @@ st.markdown("""
         border-radius: 20px;
         border: 1px solid rgba(99, 102, 241, 0.3);
         padding: 24px;
+    }
+    
+    .sim-result-box {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     /* FEATURE 4 CSS: Badges */
@@ -214,7 +221,6 @@ with st.container():
         
         if branch in totals_dict:
             st.info(f"💡 Default total for {branch} is {totals_dict[branch]}.")
-            # If default_total exists in URL use it, otherwise use dict value
             val = default_total if default_total > 0 else totals_dict[branch]
             total_classes = st.number_input("Total Classes (Est.)", value=val, step=1)
         else:
@@ -227,7 +233,6 @@ with st.container():
 
     if st.button("Analyze Attendance"):
         st.session_state.calculated = True
-        # UPDATE URL with new values
         st.query_params["held"] = str(class_held)
         st.query_params["att"] = str(class_attended)
         st.query_params["total"] = str(total_classes)
@@ -260,16 +265,14 @@ if st.session_state.calculated:
             consecutive_bunks = math.floor(max_held_for_target - class_held)
             if consecutive_bunks < 0: consecutive_bunks = 0
 
-        # --- FEATURE 4: RISK BADGES ---
-        badge_html = ""
-        if current_pct >= 85:
-            badge_html = '<span class="badge badge-scholar">🤓 SCHOLAR ZONE</span>'
-        elif current_pct >= 75:
-            badge_html = '<span class="badge badge-safe">🛡️ SAFE ZONE</span>'
-        elif current_pct >= 65:
-            badge_html = '<span class="badge badge-risk">💸 CONDONATION RISK</span>'
-        else:
-            badge_html = '<span class="badge badge-danger">💀 DETAINED ZONE</span>'
+        # Badge Logic
+        def get_badge(pct):
+            if pct >= 85: return '<span class="badge badge-scholar">🤓 SCHOLAR ZONE</span>'
+            elif pct >= 75: return '<span class="badge badge-safe">🛡️ SAFE ZONE</span>'
+            elif pct >= 65: return '<span class="badge badge-risk">💸 CONDONATION RISK</span>'
+            else: return '<span class="badge badge-danger">💀 DETAINED ZONE</span>'
+
+        badge_html = get_badge(current_pct)
 
         # --- MAIN DASHBOARD ---
         st.markdown('<div class="glass-container">', unsafe_allow_html=True)
@@ -339,10 +342,10 @@ if st.session_state.calculated:
              </div>
              """, unsafe_allow_html=True)
 
-        # --- UPGRADED SIMULATOR ---
+        # --- UPGRADED SIMULATOR WITH LIVE REPORT ---
         st.markdown('<div class="sim-container">', unsafe_allow_html=True)
         st.markdown("### 🔮 Advanced Prediction")
-        st.caption("Adjust sliders to simulate future bunks or medical certificates.")
+        st.caption("Adjust sliders to see your **Simulated Status Report** below.")
         
         col_s1, col_s2 = st.columns(2)
         
@@ -351,9 +354,7 @@ if st.session_state.calculated:
         with col_s2:
             medical_certs = st.slider("Classes you keep CERTIFICATE:", 0, 200, 0)
 
-        # CALCULATION LOGIC:
-        # Numerator = Attended + Certificates (Medical adds to attended)
-        # Denominator = Held + Future Absences (Future absences add to Held)
+        # SIMULATION LOGIC
         sim_numerator = class_attended + medical_certs
         sim_denominator = class_held + future_bunks
         
@@ -361,53 +362,60 @@ if st.session_state.calculated:
             sim_pct = round((sim_numerator / sim_denominator) * 100, 2)
             if sim_pct > 100: sim_pct = 100.0
             
-            # Color logic
-            res_color = "#0bc8a9" if sim_pct >= min_percent else "#ef4444"
+            # --- SIMULATED STATUS REPORT (LIVE) ---
+            st.markdown('<div class="sim-result-box">', unsafe_allow_html=True)
             
+            # 1. Calc Simulated Metrics
+            # Effective remaining classes reduce as we use up 'future bunks' (time passes)
+            sim_remaining = remaining_classes - future_bunks 
+            if sim_remaining < 0: sim_remaining = 0
+            
+            sim_req_total = math.ceil(total_classes * min_percent / 100)
+            sim_req_more = sim_req_total - sim_numerator
+            if sim_req_more < 0: sim_req_more = 0
+            
+            sim_bunks_possible = sim_remaining - sim_req_more
+            if sim_bunks_possible < 0: sim_bunks_possible = 0 # Fix: Don't show negative bunks
+            
+            sim_badge = get_badge(sim_pct)
+            sim_color = "#0bc8a9" if sim_pct >= min_percent else "#ef4444"
+
+            # 2. Display Top Percent
             st.markdown(f"""
-            <div style="text-align:center; margin-top:15px;">
-                <h2 style="color:{res_color}; margin:0; font-size:2.5rem;">{sim_pct}%</h2>
-                <div style="background:rgba(255,255,255,0.05); display:inline-block; padding:5px 15px; border-radius:10px; margin-top:5px;">
-                    <span style="color:#fff; font-weight:bold;">{sim_numerator}</span> 
-                    <span style="color:#94a3b8;">(Attended)</span> / 
-                    <span style="color:#fff; font-weight:bold;">{sim_denominator}</span> 
-                    <span style="color:#94a3b8;">(Total Held)</span>
-                </div>
+            <div style="text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:15px;">
+                <h4 style="color:#fff; margin:0;">PREDICTED OUTCOME</h4>
+                <h1 style="color:{sim_color}; margin:5px 0; font-size:3rem;">{sim_pct}%</h1>
+                {sim_badge}
             </div>
             """, unsafe_allow_html=True)
-        else:
-            st.write("Waiting for inputs...")
+
+            # 3. Display Status Text (Same Format as Above)
+            if sim_pct >= min_percent:
+                st.success(f"🎉 **SAFE!** With this plan, you hit {min_percent}%!")
+                if sim_remaining > 0:
+                    st.write(f"You can skip the remaining **{sim_remaining}** classes.")
+            elif sim_req_more > sim_remaining:
+                st.error(f"⚠️ **IMPOSSIBLE** to reach {min_percent}% with this plan.")
+                st.write("You are skipping too many classes.")
+            else:
+                st.info(f"You can bunk **{sim_bunks_possible}** more classes total.")
+                st.warning(f"You MUST attend **{sim_req_more}** / {sim_remaining} remaining.")
+
+            # 4. Display Stat Boxes
+            st.markdown("""<div style="display:flex; gap:10px; margin-top:10px;">""", unsafe_allow_html=True)
+            col_sa, col_sb = st.columns(2)
+            with col_sa:
+                st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_req_more}</div><div class='stat-lbl'>Need to Attend</div></div>", unsafe_allow_html=True)
+            with col_sb:
+                st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_bunks_possible}</div><div class='stat-lbl'>Can Bunk</div></div>", unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # --- FEATURE 3: DOWNLOAD REPORT ---
-        report_text = f"""
-        ATTENDANCE STRATEGY REPORT
-        Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
-        ----------------------------------------
-        Classes Held:     {class_held}
-        Classes Attended: {class_attended}
-        Current %:        {current_pct}%
-        Target %:         {min_percent}%
-        ----------------------------------------
-        ACTION PLAN:
-        - Classes Remaining: {remaining_classes}
-        - You MUST attend:   {required_more} classes
-        - You CAN bunk:      {bunks_possible} classes
-        
-        CERTIFICATES:
-        {f"Need {certs_needed} certificates to hit target immediately." if (certs_needed > 0 and current_real_percent < min_percent) else "No certificates needed right now."}
-        
-        Generated by Attendance Tracker Pro
-        """
-        
-        st.download_button(
-            label="📄 Download Strategy Report (TXT)",
-            data=report_text,
-            file_name=f"Attendance_Plan_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt",
-            mime="text/plain",
-            type="secondary"
-        )
+        # --- DOWNLOAD BUTTON ---
+        report_text = f"Subject: Attendance Report\nCurrent: {current_pct}%\nTarget: {min_percent}%\nNeed to attend: {required_more}\n\nGenerated by Attendance Tracker Pro"
+        st.download_button("⬇️ Download Report", report_text, file_name="attendance.txt")
 
 # --- FOOTER ---
 st.markdown("""
