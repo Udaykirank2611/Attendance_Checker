@@ -1,9 +1,17 @@
 import streamlit as st
 import math
 import plotly.graph_objects as go
+import datetime
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
+
+# --- FEATURE 5: AUTO-SAVE (Query Parameters) ---
+# Retrieve values from URL if they exist
+query_params = st.query_params
+default_held = int(query_params.get("held", 0))
+default_attended = int(query_params.get("att", 0))
+default_total = int(query_params.get("total", 0))
 
 # --- SESSION STATE INITIALIZATION ---
 if 'calculated' not in st.session_state:
@@ -82,6 +90,21 @@ st.markdown("""
         border: 1px solid rgba(99, 102, 241, 0.2);
         padding: 24px;
     }
+
+    /* FEATURE 4 CSS: Badges */
+    .badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+    }
+    .badge-scholar { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #059669; }
+    .badge-safe { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #2563eb; }
+    .badge-risk { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #d97706; }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #dc2626; }
 
     /* Inputs */
     .stSelectbox label, .stNumberInput label, .stSlider label {
@@ -177,9 +200,10 @@ with st.container():
     
     col1, col2 = st.columns(2)
     with col1:
-        class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d")
+        # Pre-fill with default value from URL or 0
+        class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d", value=default_held)
     with col2:
-        class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d")
+        class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d", value=default_attended)
 
     college = st.selectbox("Select Year/College", ["MVSREC 2nd Year", "MVSREC 4th Year", "Others"])
     
@@ -190,17 +214,23 @@ with st.container():
         
         if branch in totals_dict:
             st.info(f"💡 Default total for {branch} is {totals_dict[branch]}.")
-            total_classes = st.number_input("Total Classes (Est.)", value=totals_dict[branch], step=1)
+            # If default_total exists in URL use it, otherwise use dict value
+            val = default_total if default_total > 0 else totals_dict[branch]
+            total_classes = st.number_input("Total Classes (Est.)", value=val, step=1)
         else:
-            total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1)
+            total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1, value=default_total)
     else:
-        total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1)
+        total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1, value=default_total)
 
     min_percent_str = st.selectbox("Target Percentage", ['65%', '70%', '75%', '80%'], index=2)
     min_percent = int(min_percent_str.strip('%'))
 
     if st.button("Analyze Attendance"):
         st.session_state.calculated = True
+        # UPDATE URL with new values
+        st.query_params["held"] = str(class_held)
+        st.query_params["att"] = str(class_attended)
+        st.query_params["total"] = str(total_classes)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -211,6 +241,7 @@ if st.session_state.calculated:
     remaining_classes = total_classes - class_held
     missed_classes = class_held - class_attended
     if missed_classes < 0: missed_classes = 0 
+    current_pct = round((class_attended / class_held) * 100, 2) if class_held > 0 else 0
 
     if class_attended > class_held:
         st.error("❌ Attended cannot be > Held")
@@ -229,6 +260,17 @@ if st.session_state.calculated:
             consecutive_bunks = math.floor(max_held_for_target - class_held)
             if consecutive_bunks < 0: consecutive_bunks = 0
 
+        # --- FEATURE 4: RISK BADGES ---
+        badge_html = ""
+        if current_pct >= 85:
+            badge_html = '<span class="badge badge-scholar">🤓 SCHOLAR ZONE</span>'
+        elif current_pct >= 75:
+            badge_html = '<span class="badge badge-safe">🛡️ SAFE ZONE</span>'
+        elif current_pct >= 65:
+            badge_html = '<span class="badge badge-risk">💸 CONDONATION RISK</span>'
+        else:
+            badge_html = '<span class="badge badge-danger">💀 DETAINED ZONE</span>'
+
         # --- MAIN DASHBOARD ---
         st.markdown('<div class="glass-container">', unsafe_allow_html=True)
         c1, c2 = st.columns([1, 1.5])
@@ -237,7 +279,8 @@ if st.session_state.calculated:
             st.plotly_chart(create_donut_chart(class_attended, missed_classes, remaining_classes), use_container_width=True)
         
         with c2:
-            st.markdown("### Status Report")
+            st.markdown(f"### Status Report {badge_html}", unsafe_allow_html=True)
+            
             if class_attended >= min_required:
                 st.success(f"🎉 **SAFE!** You've hit {min_percent}%!")
                 st.write(f"You can skip the remaining **{remaining_classes}** classes.")
@@ -259,11 +302,8 @@ if st.session_state.calculated:
         st.markdown('</div>', unsafe_allow_html=True)
 
         # --- FEATURE: CERTIFICATE CALCULATOR ---
-        # Logic: Target Attendance for 'held' classes - Actual Attended
         target_for_current_held = math.ceil(class_held * (min_percent / 100))
         certs_needed = target_for_current_held - class_attended
-        
-        # Only show if they are actually lagging behind the target percentage right now
         current_real_percent = (class_attended / class_held) * 100 if class_held > 0 else 0
         
         if certs_needed > 0 and current_real_percent < min_percent:
@@ -319,6 +359,35 @@ if st.session_state.calculated:
             st.write("No remaining classes to simulate!")
 
         st.markdown('</div>', unsafe_allow_html=True)
+
+        # --- FEATURE 3: DOWNLOAD REPORT ---
+        report_text = f"""
+        ATTENDANCE STRATEGY REPORT
+        Date: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
+        ----------------------------------------
+        Classes Held:     {class_held}
+        Classes Attended: {class_attended}
+        Current %:        {current_pct}%
+        Target %:         {min_percent}%
+        ----------------------------------------
+        ACTION PLAN:
+        - Classes Remaining: {remaining_classes}
+        - You MUST attend:   {required_more} classes
+        - You CAN bunk:      {bunks_possible} classes
+        
+        CERTIFICATES:
+        {f"Need {certs_needed} certificates to hit target immediately." if (certs_needed > 0 and current_real_percent < min_percent) else "No certificates needed right now."}
+        
+        Generated by Attendance Tracker Pro
+        """
+        
+        st.download_button(
+            label="📄 Download Strategy Report (TXT)",
+            data=report_text,
+            file_name=f"Attendance_Plan_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt",
+            mime="text/plain",
+            type="secondary"
+        )
 
 # --- FOOTER ---
 st.markdown("""
