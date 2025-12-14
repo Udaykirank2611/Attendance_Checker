@@ -168,18 +168,18 @@ with st.container():
         class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d", help="How many you actually sat in.")
 
     # College Selection
-    college = st.selectbox("Select Your College/Year", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
+    college = st.selectbox("Select Your College/Year", ["MVSREC 2nd Year", "MVSREC 4th Year", "Others"])
 
     # Total Classes Logic
     total_classes = 0
     
-    if college == "MVSREC 3rd Year":
+    if college == "MVSREC 4th Year":
         branch = st.selectbox("Select Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
         
         # Default totals map
         totals_dict = {
-            'CSE': 350, 'DS': 324, 'AIML': 330, 'IoT': 340,
-            'IT': 360, 'ECE': 350, 'EEE': 320
+            'CSE': 400, 'DS': 433, 'AIML': 400, 'IoT': 400,
+            'IT': 400, 'ECE': 350, 'EEE': 320
         }
         
         if branch in totals_dict:
