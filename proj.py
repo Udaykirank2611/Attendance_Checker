@@ -7,6 +7,7 @@ import datetime
 st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
 
 # --- FEATURE 5: AUTO-SAVE (Query Parameters) ---
+# Retrieve values from URL if they exist
 query_params = st.query_params
 default_held = int(query_params.get("held", 0))
 default_attended = int(query_params.get("att", 0))
@@ -90,14 +91,6 @@ st.markdown("""
         padding: 24px;
     }
     
-    .sim-result-box {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px;
-        padding: 20px;
-        margin-top: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
     /* FEATURE 4 CSS: Badges */
     .badge {
         display: inline-block;
@@ -207,7 +200,6 @@ with st.container():
     
     col1, col2 = st.columns(2)
     with col1:
-        # Pre-fill with default value from URL or 0
         class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d", value=default_held)
     with col2:
         class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d", value=default_attended)
@@ -244,8 +236,11 @@ if st.session_state.calculated:
     # Calculations
     min_required = math.ceil(total_classes * min_percent / 100)
     remaining_classes = total_classes - class_held
+    if remaining_classes < 0: remaining_classes = 0
+    
     missed_classes = class_held - class_attended
     if missed_classes < 0: missed_classes = 0 
+    
     current_pct = round((class_attended / class_held) * 100, 2) if class_held > 0 else 0
 
     if class_attended > class_held:
@@ -253,9 +248,10 @@ if st.session_state.calculated:
     elif total_classes == 0:
         st.error("❌ Total classes cannot be 0")
     else:
-        required_more = min_required - class_attended
-        if required_more < 0: required_more = 0
-        bunks_possible = remaining_classes - required_more
+        required_more = max(0, min_required - class_attended)
+        
+        # FIX: Ensure bunk numbers are never negative
+        bunks_possible = max(0, remaining_classes - required_more)
         
         # Vacation Mode (Consecutive Bunks)
         target_ratio = min_percent / 100
@@ -342,10 +338,10 @@ if st.session_state.calculated:
              </div>
              """, unsafe_allow_html=True)
 
-        # --- UPGRADED SIMULATOR WITH LIVE REPORT ---
+        # --- UPGRADED SIMULATOR WITH LIVE DASHBOARD ---
         st.markdown('<div class="sim-container">', unsafe_allow_html=True)
         st.markdown("### 🔮 Advanced Prediction")
-        st.caption("Adjust sliders to see your **Simulated Status Report** below.")
+        st.caption("Adjust sliders to simulate future bunks or medical certificates.")
         
         col_s1, col_s2 = st.columns(2)
         
@@ -355,6 +351,8 @@ if st.session_state.calculated:
             medical_certs = st.slider("Classes you keep CERTIFICATE:", 0, 200, 0)
 
         # SIMULATION LOGIC
+        # Numerator = Attended + Certificates (Medical adds to attended)
+        # Denominator = Held + Future Absences (Future absences add to Held)
         sim_numerator = class_attended + medical_certs
         sim_denominator = class_held + future_bunks
         
@@ -362,54 +360,52 @@ if st.session_state.calculated:
             sim_pct = round((sim_numerator / sim_denominator) * 100, 2)
             if sim_pct > 100: sim_pct = 100.0
             
-            # --- SIMULATED STATUS REPORT (LIVE) ---
-            st.markdown('<div class="sim-result-box">', unsafe_allow_html=True)
-            
+            # --- LIVE SIMULATED DASHBOARD ---
             # 1. Calc Simulated Metrics
-            # Effective remaining classes reduce as we use up 'future bunks' (time passes)
             sim_remaining = remaining_classes - future_bunks 
             if sim_remaining < 0: sim_remaining = 0
             
-            sim_req_total = math.ceil(total_classes * min_percent / 100)
-            sim_req_more = sim_req_total - sim_numerator
-            if sim_req_more < 0: sim_req_more = 0
+            # Simulated missed for chart = (Held + Future) - (Attended + Certs)
+            sim_missed_chart = sim_denominator - sim_numerator
+            if sim_missed_chart < 0: sim_missed_chart = 0
             
-            sim_bunks_possible = sim_remaining - sim_req_more
-            if sim_bunks_possible < 0: sim_bunks_possible = 0 # Fix: Don't show negative bunks
+            sim_req_total = math.ceil(total_classes * min_percent / 100)
+            sim_req_more = max(0, sim_req_total - sim_numerator)
+            
+            # FIX: Ensure simulated bunk numbers are never negative
+            sim_bunks_possible = max(0, sim_remaining - sim_req_more)
             
             sim_badge = get_badge(sim_pct)
-            sim_color = "#0bc8a9" if sim_pct >= min_percent else "#ef4444"
 
-            # 2. Display Top Percent
-            st.markdown(f"""
-            <div style="text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:15px;">
-                <h4 style="color:#fff; margin:0;">PREDICTED OUTCOME</h4>
-                <h1 style="color:{sim_color}; margin:5px 0; font-size:3rem;">{sim_pct}%</h1>
-                {sim_badge}
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 3. Display Status Text (Same Format as Above)
-            if sim_pct >= min_percent:
-                st.success(f"🎉 **SAFE!** With this plan, you hit {min_percent}%!")
-                if sim_remaining > 0:
-                    st.write(f"You can skip the remaining **{sim_remaining}** classes.")
-            elif sim_req_more > sim_remaining:
-                st.error(f"⚠️ **IMPOSSIBLE** to reach {min_percent}% with this plan.")
-                st.write("You are skipping too many classes.")
-            else:
-                st.info(f"You can bunk **{sim_bunks_possible}** more classes total.")
-                st.warning(f"You MUST attend **{sim_req_more}** / {sim_remaining} remaining.")
-
-            # 4. Display Stat Boxes
-            st.markdown("""<div style="display:flex; gap:10px; margin-top:10px;">""", unsafe_allow_html=True)
-            col_sa, col_sb = st.columns(2)
-            with col_sa:
-                st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_req_more}</div><div class='stat-lbl'>Need to Attend</div></div>", unsafe_allow_html=True)
-            with col_sb:
-                st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_bunks_possible}</div><div class='stat-lbl'>Can Bunk</div></div>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown(f"#### 📊 Simulated Result")
             
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Same Grid Layout as Main Dashboard
+            c_sim1, c_sim2 = st.columns([1, 1.5])
+            
+            with c_sim1:
+                 st.plotly_chart(create_donut_chart(sim_numerator, sim_missed_chart, sim_remaining), use_container_width=True, key="sim_chart")
+            
+            with c_sim2:
+                st.markdown(f"### Status Report {sim_badge}", unsafe_allow_html=True)
+                
+                if sim_pct >= min_percent:
+                    st.success(f"🎉 **SAFE!** With this plan, you hit {min_percent}%!")
+                    if sim_remaining > 0:
+                        st.write(f"You can skip the remaining **{sim_remaining}** classes.")
+                elif sim_req_more > sim_remaining:
+                    st.error(f"⚠️ **IMPOSSIBLE** to reach {min_percent}% with this plan.")
+                    st.write("You are skipping too many classes.")
+                else:
+                    st.info(f"You can bunk **{sim_bunks_possible}** more classes total.")
+                    st.warning(f"You MUST attend **{sim_req_more}** / {sim_remaining} remaining.")
+
+                st.markdown("""<div style="display:flex; gap:10px; margin-top:10px;">""", unsafe_allow_html=True)
+                col_sa, col_sb = st.columns(2)
+                with col_sa:
+                    st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_req_more}</div><div class='stat-lbl'>Need to Attend</div></div>", unsafe_allow_html=True)
+                with col_sb:
+                    st.markdown(f"<div class='stat-box'><div class='stat-val'>{sim_bunks_possible}</div><div class='stat-lbl'>Can Bunk</div></div>", unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
