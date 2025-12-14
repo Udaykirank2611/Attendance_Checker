@@ -85,9 +85,9 @@ st.markdown("""
     }
 
     .sim-container {
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(15, 23, 42, 0.8);
         border-radius: 20px;
-        border: 1px solid rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.3);
         padding: 24px;
     }
 
@@ -339,24 +339,44 @@ if st.session_state.calculated:
              </div>
              """, unsafe_allow_html=True)
 
-        # --- SIMULATOR ---
+        # --- UPGRADED SIMULATOR ---
         st.markdown('<div class="sim-container">', unsafe_allow_html=True)
-        st.markdown("### 🔮 Future Simulator")
-        st.caption("Slide to see what happens if you skip the next few classes.")
+        st.markdown("### 🔮 Advanced Prediction")
+        st.caption("Adjust sliders to simulate future bunks or medical certificates.")
         
-        max_sim = min(20, remaining_classes) if remaining_classes > 0 else 10
-        if max_sim > 0:
-            sim_bunks = st.slider("Skip next X classes:", 0, max_sim, 0)
-            sim_held = class_held + sim_bunks
-            sim_attended = class_attended 
-            sim_pct = round((sim_attended / sim_held) * 100, 2)
+        col_s1, col_s2 = st.columns(2)
+        
+        with col_s1:
+            future_bunks = st.slider("Classes you will be ABSENT:", 0, 200, 0)
+        with col_s2:
+            medical_certs = st.slider("Classes you keep CERTIFICATE:", 0, 200, 0)
+
+        # CALCULATION LOGIC:
+        # Numerator = Attended + Certificates (Medical adds to attended)
+        # Denominator = Held + Future Absences (Future absences add to Held)
+        sim_numerator = class_attended + medical_certs
+        sim_denominator = class_held + future_bunks
+        
+        if sim_denominator > 0:
+            sim_pct = round((sim_numerator / sim_denominator) * 100, 2)
+            if sim_pct > 100: sim_pct = 100.0
             
-            if sim_pct >= min_percent:
-                st.markdown(f"<h3 style='color:#0bc8a9; text-align:center;'>Result: {sim_pct}% (Safe ✅)</h3>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<h3 style='color:#ef4444; text-align:center;'>Result: {sim_pct}% (Danger ⚠️)</h3>", unsafe_allow_html=True)
+            # Color logic
+            res_color = "#0bc8a9" if sim_pct >= min_percent else "#ef4444"
+            
+            st.markdown(f"""
+            <div style="text-align:center; margin-top:15px;">
+                <h2 style="color:{res_color}; margin:0; font-size:2.5rem;">{sim_pct}%</h2>
+                <div style="background:rgba(255,255,255,0.05); display:inline-block; padding:5px 15px; border-radius:10px; margin-top:5px;">
+                    <span style="color:#fff; font-weight:bold;">{sim_numerator}</span> 
+                    <span style="color:#94a3b8;">(Attended)</span> / 
+                    <span style="color:#fff; font-weight:bold;">{sim_denominator}</span> 
+                    <span style="color:#94a3b8;">(Total Held)</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.write("No remaining classes to simulate!")
+            st.write("Waiting for inputs...")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
