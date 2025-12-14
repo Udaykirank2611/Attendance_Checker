@@ -1,339 +1,279 @@
 import streamlit as st
 import math
 
-st.set_page_config(page_title="Attendance Tracker", layout="centered")
+# --- PAGE CONFIGURATION ---
+st.set_page_config(page_title="Attendance Tracker", page_icon="📊", layout="centered")
 
-# ===================== PAGE STYLES =======================
+# --- CUSTOM CSS STYLING ---
 st.markdown("""
 <style>
-body, .stApp {
-    background: linear-gradient(135deg, #6d83f2 0%, #0bc8a9 100%) !important;
-    min-height: 100vh;
-}
-
-/* ==== GLASS MENU BAR ==== */
-.top-menu {
-    background: rgba(0,24,48, 0.75);
-    padding: 18px 5px 13px 5px;
-    border-radius: 0 0 26px 26px;
-    box-shadow: 0 6px 18px rgba(31,74,138,0.08);
-    margin-bottom: 28px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.top-menu a {
-    margin: 0 15px;
-    text-decoration: none;
-    color: #fff;
-    font-weight: 600;
-    letter-spacing: 1px;
-    transition: all .22s;
-    padding: 7px 18px;
-    border-radius: 20px;
-}
-
-.top-menu a:hover {
-    background: #0bc8a9;
-    color: #2b2b2b;
-    box-shadow: 0 2px 12px rgba(17,228,215,0.18);
-    text-decoration: none;
-    transform: translateY(-2px) scale(1.06);
-}
-
-/* ==== Main glass card ==== */
-.main-card {
-    max-width: 670px;
-    margin: 32px auto 32px auto;
-    background: rgba(255,255,255,0.10);
-    box-shadow: 0 8px 32px 0 rgba(21,27,80,.15);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 32px 32px 24px 32px;
-    font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
-}
-
-/* Title */
-.cool-title {
-    font-size: 2.44rem;
-    color: #fff;
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-shadow: 0 2px 18px #4e6ce470;
-    margin-top: 10px;
-}
-
-.stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
-    color: #fff !important;
-    margin-top: 20px;
-    margin-bottom: 14px;
-    text-shadow: 0 2px 10px #3b68aa30;
-}
-
-/* Inputs/glass */
-.stNumberInput > div, .stSelectbox > div, .stTextInput > div {
-    background: rgba(255,255,255,0.11);
-    border-radius: 14px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 2px 12px 0 #5786e9cc, 0 1.5px 8px 0 #0bc8a966;
-    font-family: 'Segoe UI', 'Poppins', Arial, sans-serif !important;
-    margin-bottom: 9px;
-    color: #f6efff !important;
-}
-
-label, .css-1cpxqw2, .css-1jy7b63 {
-    font-size: 1.09rem!important;
-    color: #ecebff !important;
-    margin-bottom: 4px;
-    font-weight: 600;
-}
-
-/* Button styling */
-.stButton > button {
-    background: linear-gradient(90deg,#5dd6ff 0,#7b6ffb 100%) !important;
-    color: #fff !important;
-    border: none;
-    font-size: 1.19rem;
-    border-radius: 15px;
-    font-weight: 700;
-    margin-top: 12px;
-    padding: .44rem 1.7rem;
-    box-shadow: 0 2px 10px #869bff70;
-    letter-spacing: 1px;
-    transition: all .16s;
-}
-.stButton > button:hover {
-    background: linear-gradient(90deg,#0bc8a9 0,#7b6ffb 90%);
-    box-shadow: 0 4px 24px #869bffad;
-}
-
-/* Alerts styling */
-.stAlert {
-    border-radius: 14px !important;
-    backdrop-filter: blur(8px);
-    color: #fff !important;
-}
-.stAlert-success {
-    background-color: rgba(40,230,180,0.25)!important;
-}
-.stAlert-error {
-    background-color: rgba(228,54,158,0.23)!important;
-}
-.stAlert-info {
-    background-color: rgba(92,141,255,0.17)!important;
-}
-.stAlert-warning {
-    background-color: rgba(255,226,93,0.27)!important;
-    color: #292700 !important;
-}
-
-/* Info icon and tooltip */
-.info-container {
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-    margin-bottom: 4px;
-}
-.info-icon {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    color: #0bc8a9;
-    background: rgba(255,255,255,0.21);
-    border-radius: 50%;
-    font-weight: bold;
-    font-size: 15px;
-    text-align: center;
-    line-height: 20px;
-    transition: box-shadow .18s;
-    box-shadow: 0 2px 6px #1281d044;
-}
-
-.info-icon:hover {
-    box-shadow: 0 2px 16px #12ffd077;
-    background: #e4fffb;
-    color: #299f8c;
-}
-
-.info-icon .tooltip-text {
-    visibility: hidden;
-    width: 270px;
-    background: #2f415aee;
-    color: #fff;
-    text-align: left;
-    border-radius: 8px;
-    padding: 9px 13px;
-    position: absolute;
-    z-index: 100;
-    left: 120%;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.96rem;
-    box-shadow: 0 3px 18px #16354e90;
-    opacity: 0;
-    transition: opacity 0.25s;
-}
-
-.info-icon:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-}
-
-@media (max-width: 700px) {
-    .info-icon .tooltip-text {
-        left: unset;
-        right: 120%;
+    /* Global Reset & Background */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+    
+    .stApp {
+        background: radial-gradient(circle at 10% 20%, rgb(17, 24, 39) 0%, rgb(10, 10, 10) 90%);
+        font-family: 'Outfit', sans-serif;
     }
-}
 
-@media (max-width: 1000px) {
-    .main-card { padding: 13px 6px 2px 6px; }
-    .cool-title { font-size: 1.6rem; }
-}
+    /* Header Styling */
+    .title-text {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 2.2rem;
+        text-align: center;
+        background: -webkit-linear-gradient(45deg, #4f46e5, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    
+    .subtitle-text {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Top Navigation Bar */
+    .nav-bar {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 10px 20px;
+        border-radius: 50px;
+        display: flex;
+        justify-content: center;
+        width: fit-content;
+        margin: 0 auto 30px auto;
+    }
+    .nav-bar a {
+        color: #e2e8f0;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+    }
+    .nav-bar a:hover {
+        background: rgba(79, 70, 229, 0.2);
+        color: #6366f1;
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Main Glass Card */
+    .glass-container {
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        padding: 32px;
+        margin-bottom: 30px;
+        backdrop-filter: blur(12px);
+    }
+
+    /* Input Fields Styling */
+    .stSelectbox label, .stNumberInput label {
+        color: #e2e8f0 !important;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .stSelectbox > div > div, .stNumberInput > div > div > input {
+        background-color: #0f172a !important;
+        border: 1px solid #334155 !important;
+        color: white !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Button Styling */
+    .stButton > button {
+        width: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1rem !important;
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+        transition: all 0.3s ease;
+        margin-top: 10px;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+    }
+
+    /* Custom Alert Styling to match Dark Theme */
+    .stAlert {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #e2e8f0 !important;
+        border-radius: 12px !important;
+    }
+
+    /* Result Cards */
+    .result-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding-bottom: 8px;
+    }
+    .stat-label { color: #94a3b8; }
+    .stat-val { color: #fff; font-weight: 600; }
+
+    /* Footer */
+    .footer {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 40px;
+        padding-bottom: 20px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        padding-top: 20px;
+    }
+    .footer span { color: #94a3b8; font-weight: 500; }
 </style>
 """, unsafe_allow_html=True)
 
-# ===================== TOP MENU BAR ==========================
+# --- UI LAYOUT ---
+
+# 1. Navigation
 st.markdown("""
-<div class="top-menu">
-    <a href="https://mvsrpapers.streamlit.app" target="_blank">MVSREC Papers</a>
+<div class="nav-bar">
+    <a href="https://mvsrpapers.streamlit.app" target="_blank">📚 MVSREC Papers</a>
+    <a href="#">📊 BunkChecker</a>
 </div>
 """, unsafe_allow_html=True)
 
-# ================= MAIN CARD START ================================
-st.markdown('<div class="main-card">', unsafe_allow_html=True)
+# 2. Title
+st.markdown('<h1 class="title-text">ATTENDANCE TRACKER</h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle-text">Calculate your bunks safely without falling below the limit.</p>', unsafe_allow_html=True)
 
-st.markdown("<div class='cool-title'>📊 Attendance Tracker</div>", unsafe_allow_html=True)
-st.markdown("---")
+# 3. Main Logic Container
+with st.container():
+    st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+    
+    # Input Row 1
+    col1, col2 = st.columns(2)
+    with col1:
+        class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d", help="Total classes conducted by the college so far.")
+    with col2:
+        class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d", help="How many you actually sat in.")
 
-st.subheader("📥 Enter Your Details")
+    # College Selection
+    college = st.selectbox("Select Your College/Year", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
 
-class_held = st.number_input("📘 Number of Classes Held", min_value=0, step=1, format="%d")
-class_attended = st.number_input("🧑‍🏫 Number of Classes Attended", min_value=0, step=1, format="%d")
-
-college = st.selectbox("🏫 Select Your College", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
-
-# ---------- TOTAL NUMBER OF CLASSES with INFO ICON -------------
-def render_total_classes_input(college_choice):
-    total_label_html = """
-    <div class='info-container'>
-        <span>Enter Total Number of Classes</span>
-        <span class='info-icon'>
-            ℹ
-            <span class='tooltip-text'>
-                To calculate total number of classes, check how many classes are there per week and multiply by 15 or 16.
-            </span>
-        </span>
-    </div>
-    """
-    st.markdown(total_label_html, unsafe_allow_html=True)
-
-    if college_choice == "MVSREC 3rd Year":
-        branch = st.selectbox("🧪 Select Your Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
-        # Default totals for branches
+    # Total Classes Logic
+    total_classes = 0
+    
+    if college == "MVSREC 3rd Year":
+        branch = st.selectbox("Select Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
+        
+        # Default totals map
         totals_dict = {
-            'CSE': 350,
-            'DS': 324,
-            'AIML': 330,
-            'IoT': 340,
-            'IT': 360,
-            'ECE': 350,
-            'EEE': 320
+            'CSE': 350, 'DS': 324, 'AIML': 330, 'IoT': 340,
+            'IT': 360, 'ECE': 350, 'EEE': 320
         }
-
+        
         if branch in totals_dict:
             default_total = totals_dict[branch]
-            st.number_input("Total Number of Classes (Default)", value=default_total, disabled=True, key="total_classes_disabled")
-            total_classes = st.number_input("Or enter Total Number of Classes (override)", min_value=0, step=1, format="%d", key="total_classes_override")
-            if total_classes == 0:
-                total_classes = default_total
+            # Use columns to show the default and allow override
+            st.info(f"💡 Default total for {branch} is usually **{default_total}**.")
+            total_classes = st.number_input(
+                "Total Classes (Estimate)", 
+                value=default_total, 
+                step=1, 
+                help="To calculate manually: Classes per week × 16 weeks."
+            )
         else:
-            total_classes = st.number_input("", min_value=0, step=1, format="%d", key="total_classes_manual")
+            total_classes = st.number_input("Total Classes (Estimate)", min_value=0, step=1, help="To calculate manually: Classes per week × 16 weeks.")
     else:
-        total_classes = st.number_input("", min_value=0, step=1, format="%d", key="total_classes_other")
+        total_classes = st.number_input("Total Classes (Estimate)", min_value=0, step=1, help="To calculate manually: Classes per week × 16 weeks.")
 
-    return total_classes
+    # Percentage Requirement
+    min_percent_str = st.selectbox("Required Percentage", ['65%', '70%', '75%', '80%'], index=2)
+    min_percent = int(min_percent_str.strip('%'))
 
-total_classes = render_total_classes_input(college)
+    # Calculate Button
+    check_btn = st.button("Calculate Bunks")
 
-min_percent_str = st.selectbox("🎯 Required Attendance Percentage", ['65%', '70%', '75%', '80%'])
-min_percent = int(min_percent_str.strip('%'))
+    st.markdown('</div>', unsafe_allow_html=True) # End Input Container
 
-st.markdown("---")
-st.subheader("ℹ️ Notes")
-st.info("These numbers are approximate and may vary by 1–2% depending on extra or cancelled classes.\nThe portal will be updated upon schedule changes.")
+# --- RESULTS DISPLAY ---
 
-min_required = math.ceil(total_classes * min_percent / 100)
-remaining_classes = total_classes - class_held
-required_more = min_required - class_attended
-bunks_possible = remaining_classes - required_more
-
-if st.button("✅ Check Attendance"):
-    st.markdown("---")
-    st.subheader("📋 Result Summary")
-
+if check_btn:
+    # Calculations
+    min_required = math.ceil(total_classes * min_percent / 100)
+    remaining_classes = total_classes - class_held
+    
+    # Logic Checks
     if class_attended > class_held:
-        st.error("❌ Classes attended cannot be more than classes held.")
+        st.error("❌ Classes attended cannot be higher than classes held!")
     elif total_classes == 0:
-        st.error("❌ Total classes cannot be 0.")
+        st.error("❌ Total classes cannot be zero.")
     else:
+        required_more = min_required - class_attended
+        bunks_possible = remaining_classes - required_more
+        current_percentage = round((class_attended / class_held) * 100, 2) if class_held > 0 else 0
         max_possible_percent = round(((class_attended + remaining_classes) / total_classes) * 100, 2)
 
+        st.markdown('<div class="glass-container">', unsafe_allow_html=True)
+        st.subheader("📋 Result Summary")
+        
+        # Display Logic
         if class_attended >= min_required:
-            st.success(f"🎉 You've already reached the required {min_percent}% attendance.")
-            st.info(f"You can skip all remaining classes and still stay above {min_percent}%.")
+            st.success(f"🎉 **Safe Zone!** You have already crossed {min_percent}% attendance.")
+            st.caption(f"You can bunk all remaining {remaining_classes} classes if you want.")
+        
         elif required_more > remaining_classes:
-            st.error(f"⚠️ You cannot reach {min_percent}% even if you attend every remaining class.")
-            st.error(f"Max possible attendance: {max_possible_percent}%")
+            st.error(f"⚠️ **Danger!** You cannot reach {min_percent}% even if you attend every single class.")
+            st.write(f"Maximum possible: **{max_possible_percent}%**")
+        
         else:
-            st.info(f"You can safely bunk up to **{bunks_possible}** classes.")
-            st.info(f"You must attend **{required_more}** more classes out of **{remaining_classes}** to maintain {min_percent}%.")
-            if bunks_possible < 15:
-                st.warning(f"⚠️ Limited room to skip. Max attendance if you attend all: {max_possible_percent}%")
+            # Main Result
+            st.info(f"You can safely bunk **{bunks_possible}** more classes.")
+            
+            if bunks_possible < 10:
+                st.warning(f"⚠️ **Tight Schedule:** You must attend **{required_more}** out of the remaining **{remaining_classes}** classes.")
             else:
-                st.success(f"👍 You're on track! Max possible attendance: {max_possible_percent}%")
+                st.success(f"👍 **On Track:** You only need to attend **{required_more}** out of the remaining **{remaining_classes}** classes.")
 
-        st.markdown("---")
-        st.subheader("📊 Detailed Breakdown")
-        st.write(f"• Total Classes Scheduled: **{total_classes}**")
-        st.write(f"• Classes Held: **{class_held}**")
-        st.write(f"• Classes Attended: **{class_attended}**")
-        st.write(f"• Required for {min_percent}%: **{min_required}**")
-        st.write(f"• Remaining Classes: **{remaining_classes}**")
+        # Detailed Stats Table
+        st.markdown("""
+        <div class="result-card">
+            <h4 style="color:#fff; margin-bottom:15px; font-size:1.1rem;">📊 Detailed Breakdown</h4>
+        """, unsafe_allow_html=True)
+        
+        stats = [
+            ("Current Percentage", f"{current_percentage}%"),
+            ("Total Classes Scheduled", total_classes),
+            ("Classes Held So Far", class_held),
+            ("Classes Attended", class_attended),
+            ("Classes Remaining", remaining_classes),
+            (f"Required for {min_percent}%", min_required)
+        ]
+        
+        for label, value in stats:
+            st.markdown(f"""
+            <div class="stat-row">
+                <span class="stat-label">{label}</span>
+                <span class="stat-val">{value}</span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True) # End Result Container
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ============= FOOTER ================
-footer = """
-<style>
-.footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100vw;
-    background: rgba(25,30,43,0.28);
-    color: #fff;
-    text-align: center;
-    padding: 10px 0;
-    font-size: 1.02rem;
-    letter-spacing: 2px;
-    z-index: 99;
-    font-weight: 400;
-    user-select: none;
-    box-shadow: 0 -2px 8px #1b2c556e;
-    backdrop-filter: blur(6px);
-}
-@media (max-width: 1000px) {
-    .footer { font-size: .95rem; }
-}
-</style>
+# --- FOOTER ---
+st.markdown("""
 <div class="footer">
-    Developed by <b>Uday Kiran</b> | 📧 245122750006@mvsrec.edu.in
+    Developed by <span>Uday Kiran</span> | Contact: 245122750006@mvsrec.edu.in
 </div>
-"""
-st.markdown(footer, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
