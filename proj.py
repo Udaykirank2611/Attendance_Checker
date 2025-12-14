@@ -5,7 +5,7 @@ import datetime
 from fpdf import FPDF
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
+st.set_page_config(page_title="BUNK CHECKER", page_icon="📊", layout="centered")
 
 # --- SESSION STATE INITIALIZATION ---
 if 'calculated' not in st.session_state:
@@ -290,7 +290,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<h1 class="title-text">ATTENDANCE PRO</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="title-text">BUNK CHECKER</h1>', unsafe_allow_html=True)
 
 with st.container():
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
