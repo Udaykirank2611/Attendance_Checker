@@ -1,8 +1,14 @@
 import streamlit as st
 import math
+import plotly.graph_objects as go
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="Attendance Tracker", page_icon="📊", layout="centered")
+st.set_page_config(page_title="Attendance Tracker Pro", page_icon="📊", layout="centered")
+
+# --- SESSION STATE INITIALIZATION ---
+# This ensures the results stay visible when you use the 'What If' slider
+if 'calculated' not in st.session_state:
+    st.session_state.calculated = False
 
 # --- CUSTOM CSS STYLING ---
 st.markdown("""
@@ -27,13 +33,6 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     
-    .subtitle-text {
-        text-align: center;
-        color: #94a3b8;
-        font-size: 0.9rem;
-        margin-bottom: 2rem;
-    }
-
     /* Top Navigation Bar */
     .nav-bar {
         background: rgba(255, 255, 255, 0.05);
@@ -67,15 +66,23 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         padding: 32px;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         backdrop-filter: blur(12px);
     }
 
-    /* Input Fields Styling */
-    .stSelectbox label, .stNumberInput label {
+    /* Simulator Card (Darker) */
+    .sim-container {
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 20px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        padding: 24px;
+        margin-top: 20px;
+    }
+
+    /* Input Fields & Buttons */
+    .stSelectbox label, .stNumberInput label, .stSlider label {
         color: #e2e8f0 !important;
         font-weight: 500;
-        font-size: 0.95rem;
     }
     .stSelectbox > div > div, .stNumberInput > div > div > input {
         background-color: #0f172a !important;
@@ -84,7 +91,6 @@ st.markdown("""
         border-radius: 12px !important;
     }
     
-    /* Button Styling */
     .stButton > button {
         width: 100%;
         background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) !important;
@@ -102,31 +108,15 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
     }
 
-    /* Custom Alert Styling to match Dark Theme */
-    .stAlert {
-        background-color: rgba(15, 23, 42, 0.8) !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
-        color: #e2e8f0 !important;
-        border-radius: 12px !important;
+    /* Stats Row */
+    .stat-box {
+        text-align: center; 
+        background: rgba(255,255,255,0.05); 
+        padding: 10px; 
+        border-radius: 12px;
     }
-
-    /* Result Cards */
-    .result-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px;
-        padding: 20px;
-        margin-top: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .stat-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-        padding-bottom: 8px;
-    }
-    .stat-label { color: #94a3b8; }
-    .stat-val { color: #fff; font-weight: 600; }
+    .stat-val { font-size: 1.5rem; font-weight: bold; color: #fff; }
+    .stat-lbl { font-size: 0.8rem; color: #94a3b8; }
 
     /* Footer */
     .footer {
@@ -138,138 +128,186 @@ st.markdown("""
         border-top: 1px solid rgba(255,255,255,0.05);
         padding-top: 20px;
     }
-    .footer span { color: #94a3b8; font-weight: 500; }
 </style>
 """, unsafe_allow_html=True)
 
+# --- HELPER FUNCTIONS ---
+
+def create_donut_chart(attended, bunked, remaining):
+    """Creates a glassmorphism donut chart using Plotly"""
+    colors = ['#0bc8a9', '#ef4444', '#64748b'] # Green (Attended), Red (Bunked), Grey (Remaining)
+    labels = ['Attended', 'Missed', 'Future']
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=labels,
+        values=[attended, bunked, remaining],
+        hole=.75,
+        marker=dict(colors=colors, line=dict(color='rgba(255,255,255,0.1)', width=1)),
+        textinfo='none', # Hide labels on chart to keep it clean
+        hoverinfo='label+value+percent'
+    )])
+
+    # Center Text
+    total = attended + bunked + remaining
+    current_pct = round((attended / (attended + bunked)) * 100) if (attended+bunked) > 0 else 0
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        showlegend=False,
+        margin=dict(t=10, b=10, l=10, r=10),
+        height=220,
+        annotations=[dict(text=f"<span style='font-size:28px; font-weight:bold; color:white'>{current_pct}%</span><br><span style='color:#94a3b8; font-size:12px'>Current</span>", x=0.5, y=0.5, font_size=20, showarrow=False)]
+    )
+    return fig
+
 # --- UI LAYOUT ---
 
-# 1. Navigation
+# Navigation
 st.markdown("""
 <div class="nav-bar">
-    <a href="https://mvsrpapers.streamlit.app" target="_blank">📚 MVSREC Papers</a>
-    <a href="#">📊 BunkChecker</a>
+    <a href="https://mvsrpapers.streamlit.app" target="_blank">📚 Papers</a>
+    <a href="#">📊 Tracker Pro</a>
 </div>
 """, unsafe_allow_html=True)
 
-# 2. Title
-st.markdown('<h1 class="title-text">ATTENDANCE TRACKER</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle-text">Calculate your bunks safely without falling below the limit.</p>', unsafe_allow_html=True)
+st.markdown('<h1 class="title-text">ATTENDANCE PRO</h1>', unsafe_allow_html=True)
 
-# 3. Main Logic Container
 with st.container():
     st.markdown('<div class="glass-container">', unsafe_allow_html=True)
     
-    # Input Row 1
+    # Inputs
     col1, col2 = st.columns(2)
     with col1:
-        class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d", help="Total classes conducted by the college so far.")
+        class_held = st.number_input("Classes Held", min_value=0, step=1, format="%d")
     with col2:
-        class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d", help="How many you actually sat in.")
+        class_attended = st.number_input("Classes Attended", min_value=0, step=1, format="%d")
 
-    # College Selection
-    college = st.selectbox("Select Your College/Year", ["MVSREC 2nd Year", "MVSREC 4th Year", "Others"])
-
-    # Total Classes Logic
-    total_classes = 0
+    # Advanced Total Calculation
+    college = st.selectbox("Select Year/College", ["MVSREC 2nd Year", "MVSREC 3rd Year", "Others"])
     
-    if college == "MVSREC 4th Year":
+    total_classes = 0
+    if college == "MVSREC 3rd Year":
         branch = st.selectbox("Select Branch", ['CSE', 'DS', 'AIML', 'IoT', 'IT', 'ECE', 'EEE', 'OTHERS'])
-        
-        # Default totals map
-        totals_dict = {
-            'CSE': 400, 'DS': 433, 'AIML': 400, 'IoT': 400,
-            'IT': 400, 'ECE': 350, 'EEE': 320
-        }
+        totals_dict = {'CSE': 350, 'DS': 324, 'AIML': 330, 'IoT': 340, 'IT': 360, 'ECE': 350, 'EEE': 320}
         
         if branch in totals_dict:
-            default_total = totals_dict[branch]
-            # Use columns to show the default and allow override
-            st.info(f"💡 Default total for {branch} is usually **{default_total}**.")
-            total_classes = st.number_input(
-                "Total Classes (Estimate)", 
-                value=default_total, 
-                step=1, 
-                help="To calculate manually: Classes per week × 16 weeks."
-            )
+            st.info(f"💡 Default total for {branch} is {totals_dict[branch]}.")
+            total_classes = st.number_input("Total Classes (Est.)", value=totals_dict[branch], step=1)
         else:
-            total_classes = st.number_input("Total Classes (Estimate)", min_value=0, step=1, help="To calculate manually: Classes per week × 16 weeks.")
+            total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1)
     else:
-        total_classes = st.number_input("Total Classes (Estimate)", min_value=0, step=1, help="To calculate manually: Classes per week × 16 weeks.")
+        total_classes = st.number_input("Total Classes (Est.)", min_value=0, step=1)
 
-    # Percentage Requirement
-    min_percent_str = st.selectbox("Required Percentage", ['65%', '70%', '75%', '80%'], index=2)
+    min_percent_str = st.selectbox("Target Percentage", ['65%', '70%', '75%', '80%'], index=2)
     min_percent = int(min_percent_str.strip('%'))
 
-    # Calculate Button
-    check_btn = st.button("Calculate Bunks")
+    if st.button("Analyze Attendance"):
+        st.session_state.calculated = True
 
-    st.markdown('</div>', unsafe_allow_html=True) # End Input Container
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- RESULTS DISPLAY ---
+# --- RESULTS LOGIC ---
 
-if check_btn:
-    # Calculations
+if st.session_state.calculated:
+    # Basic Calcs
     min_required = math.ceil(total_classes * min_percent / 100)
     remaining_classes = total_classes - class_held
-    
-    # Logic Checks
+    missed_classes = class_held - class_attended
+    if missed_classes < 0: missed_classes = 0 # Safety check
+
+    # Error Handling
     if class_attended > class_held:
-        st.error("❌ Classes attended cannot be higher than classes held!")
+        st.error("❌ Attended cannot be > Held")
     elif total_classes == 0:
-        st.error("❌ Total classes cannot be zero.")
+        st.error("❌ Total classes cannot be 0")
     else:
+        # --- FEATURE 1: DASHBOARD & CHART ---
         required_more = min_required - class_attended
+        if required_more < 0: required_more = 0
         bunks_possible = remaining_classes - required_more
-        current_percentage = round((class_attended / class_held) * 100, 2) if class_held > 0 else 0
-        max_possible_percent = round(((class_attended + remaining_classes) / total_classes) * 100, 2)
+        
+        # Max Consecutive Bunks (Vacation Mode) Logic
+        # Solve: Attended / (Held + x) = Target%
+        # x = (Attended / Target%) - Held
+        target_ratio = min_percent / 100
+        if target_ratio > 0:
+            max_held_for_target = class_attended / target_ratio
+            consecutive_bunks = math.floor(max_held_for_target - class_held)
+            if consecutive_bunks < 0: consecutive_bunks = 0
+        else:
+            consecutive_bunks = 999
 
         st.markdown('<div class="glass-container">', unsafe_allow_html=True)
-        st.subheader("📋 Result Summary")
         
-        # Display Logic
-        if class_attended >= min_required:
-            st.success(f"🎉 **Safe Zone!** You have already crossed {min_percent}% attendance.")
-            st.caption(f"You can bunk all remaining {remaining_classes} classes if you want.")
+        # Layout: Chart on Left, Stats on Right
+        c1, c2 = st.columns([1, 1.5])
         
-        elif required_more > remaining_classes:
-            st.error(f"⚠️ **Danger!** You cannot reach {min_percent}% even if you attend every single class.")
-            st.write(f"Maximum possible: **{max_possible_percent}%**")
+        with c1:
+            st.plotly_chart(create_donut_chart(class_attended, missed_classes, remaining_classes), use_container_width=True)
         
-        else:
-            # Main Result
-            st.info(f"You can safely bunk **{bunks_possible}** more classes.")
-            
-            if bunks_possible < 10:
-                st.warning(f"⚠️ **Tight Schedule:** You must attend **{required_more}** out of the remaining **{remaining_classes}** classes.")
+        with c2:
+            st.markdown("### Status Report")
+            if class_attended >= min_required:
+                st.success(f"🎉 **SAFE!** You've hit {min_percent}%!")
+                st.write(f"You can skip the remaining **{remaining_classes}** classes.")
+            elif required_more > remaining_classes:
+                max_reach = round(((class_attended + remaining_classes)/total_classes)*100, 1)
+                st.error(f"⚠️ **IMPOSSIBLE** to reach {min_percent}%.")
+                st.write(f"Max possible: **{max_reach}%**")
             else:
-                st.success(f"👍 **On Track:** You only need to attend **{required_more}** out of the remaining **{remaining_classes}** classes.")
+                st.info(f"You can bunk **{bunks_possible}** more classes total.")
+                st.warning(f"You MUST attend **{required_more}** / {remaining_classes} remaining.")
 
-        # Detailed Stats Table
-        st.markdown("""
-        <div class="result-card">
-            <h4 style="color:#fff; margin-bottom:15px; font-size:1.1rem;">📊 Detailed Breakdown</h4>
-        """, unsafe_allow_html=True)
+            # Quick Stats Row
+            st.markdown("""<div style="display:flex; gap:10px; margin-top:10px;">""", unsafe_allow_html=True)
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown(f"<div class='stat-box'><div class='stat-val'>{required_more}</div><div class='stat-lbl'>Need to Attend</div></div>", unsafe_allow_html=True)
+            with col_b:
+                st.markdown(f"<div class='stat-box'><div class='stat-val'>{bunks_possible}</div><div class='stat-lbl'>Can Bunk</div></div>", unsafe_allow_html=True)
         
-        stats = [
-            ("Current Percentage", f"{current_percentage}%"),
-            ("Total Classes Scheduled", total_classes),
-            ("Classes Held So Far", class_held),
-            ("Classes Attended", class_attended),
-            ("Classes Remaining", remaining_classes),
-            (f"Required for {min_percent}%", min_required)
-        ]
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # --- FEATURE 3: SAFE BUNK (VACATION MODE) ---
+        if consecutive_bunks > 0 and class_attended >= min_required == False:
+             st.markdown(f"""
+             <div class="glass-container" style="border-left: 5px solid #0bc8a9;">
+                <h4 style="margin:0; color:#fff;">🏖️ Vacation Mode</h4>
+                <p style="color:#cbd5e1; margin-top:5px;">
+                    Based on your current attendance, you can skip the next <b>{consecutive_bunks} classes in a row</b> 
+                    before your percentage drops exactly to {min_percent}%.
+                </p>
+             </div>
+             """, unsafe_allow_html=True)
+
+
+        # --- FEATURE 2: WHAT-IF SIMULATOR ---
+        st.markdown('<div class="sim-container">', unsafe_allow_html=True)
+        st.markdown("### 🔮 What If Simulator")
+        st.caption("Slide to see what happens if you skip the next few classes.")
         
-        for label, value in stats:
-            st.markdown(f"""
-            <div class="stat-row">
-                <span class="stat-label">{label}</span>
-                <span class="stat-val">{value}</span>
-            </div>
-            """, unsafe_allow_html=True)
+        # Slider for next X classes
+        # Limit slider to remaining classes or a reasonable number (e.g., 20)
+        max_sim = min(20, remaining_classes) if remaining_classes > 0 else 10
+        
+        if max_sim > 0:
+            sim_bunks = st.slider("Skip next X classes:", 0, max_sim, 0)
             
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True) # End Result Container
+            # Simulated Calculation
+            sim_held = class_held + sim_bunks
+            sim_attended = class_attended # Attended stays same, Held increases
+            sim_pct = round((sim_attended / sim_held) * 100, 2)
+            
+            # Dynamic Feedback
+            if sim_pct >= min_percent:
+                st.markdown(f"<h3 style='color:#0bc8a9; text-align:center;'>Result: {sim_pct}% (Safe ✅)</h3>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<h3 style='color:#ef4444; text-align:center;'>Result: {sim_pct}% (Danger ⚠️)</h3>", unsafe_allow_html=True)
+        else:
+            st.write("No remaining classes to simulate!")
+
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # --- FOOTER ---
 st.markdown("""
